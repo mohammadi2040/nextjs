@@ -1,60 +1,40 @@
-"use client";
+"use client"; // مهم برای استفاده از useState و fetch در Next.js app
+
 import { useState } from "react";
+import { sendMessageToDeepseek } from "../chatApi"; // مسیر فایل backend
 
-export default function Home() {
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
+export default function ChatPage() {
+  const [message, setMessage] = useState("");
+  const [response, setResponse] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!question.trim()) return;
-
-    // فعلا پاسخ رو شبیه‌سازی می‌کنیم
-    setAnswer("🤖 هوش مصنوعی: پاسخ به سؤال شما در حال آماده‌سازی است...");
-
-    // اینجا بعداً می‌تونیم اتصال به API هوش مصنوعی رو بذاریم
-    setTimeout(() => {
-      setAnswer(`جواب شبیه‌سازی شده برای: «${question}»`);
-    }, 1500);
+  const sendMessage = async () => {
+    setLoading(true);
+    try {
+      const data = await sendMessageToDeepseek(message);
+      setResponse(JSON.stringify(data, null, 2));
+    } catch (err) {
+      setResponse("Error: " + err.message);
+    }
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start bg-gray-100 font-sans">
-      {/* Header */}
-      <header className="w-full bg-blue-600 text-white py-4 px-6 shadow-md text-center text-xl font-bold">
-        🎓 معلم خصوصی هوش مصنوعی
-      </header>
-
-      {/* Main Content */}
-      <main className="flex flex-col items-center mt-10 w-full max-w-2xl px-4">
-        {/* Question Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="w-full bg-white p-6 rounded-2xl shadow-md flex flex-col gap-4"
-        >
-          <label className="text-lg font-medium">سوال خود را وارد کنید:</label>
-          <input
-            type="text"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="مثلاً: مشتق x² چیست؟"
-            className="border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
-          >
-            ارسال
-          </button>
-        </form>
-
-        {/* Answer Section */}
-        {answer && (
-          <div className="mt-6 w-full bg-green-100 p-6 rounded-2xl shadow-inner text-gray-800">
-            {answer}
-          </div>
-        )}
-      </main>
+    <div style={{ padding: "20px" }}>
+      <h1>AI Chat</h1>
+      <textarea
+        rows={4}
+        cols={50}
+        placeholder="پیام خود را وارد کنید..."
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+      />
+      <br />
+      <button onClick={sendMessage} disabled={loading}>
+        {loading ? "در حال ارسال..." : "ارسال"}
+      </button>
+      <h2>پاسخ:</h2>
+      <pre>{response}</pre>
     </div>
   );
 }
